@@ -1,15 +1,27 @@
 #!/usr/bin/env python3
+"""
+Small program to help you solve the 'wordle' game
+"""
 
 import random
 
 class LetterColors:
+    """
+    Keep track of the colors of each letter
+    """
 
     def __init__(self):
+        """
+        No letters to start
+        """
         self.yellow = set()
         self.green = set()
         self.black = set()
 
     def update(self, word):
+        """
+        Update manually the colors after a guessed word.
+        """
         for pos, letter in enumerate(word):
             if (pos, letter) in self.green:
                 continue
@@ -29,15 +41,24 @@ class LetterColors:
         print(f"Colors for word '{word}' updated correctly")
 
 def load_words():
-    with open('words_alpha.txt') as word_file:
+    """
+    Load words from dictionary file
+    """
+    with open('words_alpha.txt', encoding='utf-8') as word_file:
         valid_words = set(word_file.read().split())
 
     return valid_words
 
 def all_letters_differ(word):
+    """
+    Do we have a word where all letters differ?
+    """
     return len(word) == len(set(word))
 
 def first_guess(words):
+    """
+    How to guess the first word
+    """
     print("FIRST WORD")
     differ_letters = [ x for x in words if all_letters_differ(x)]
     print(f"    Different letter words: {len(differ_letters)}")
@@ -46,17 +67,22 @@ def first_guess(words):
     return w
 
 def guess(words):
+    """
+    Guess a word given a list of choices
+    """
     words_copy = words.copy()
     while True:
         ret = random.choice(words_copy)
         print(f"    guessing: {ret}")
-        answer = input("    Make a different guess? (y,i,N)\n    ")
+        answer = input("    Make a different guess?\n"
+                       "    (y=yes, i=input, p=print, N=no)\n    ")
         if answer == "i":
             ret = input("    Insert own guess:\n    ")
             if len(ret) == 5:
                 break
-            else:
-                print("    Wrong length of guess!!")
+            print("    Wrong length of guess!!")
+        elif answer == "p":
+            print(f"    Choices: {words_copy}")
         elif answer == "y":
             words_copy.remove(ret)
         else:
@@ -66,6 +92,9 @@ def guess(words):
     return ret
 
 def keep(colors, word):
+    """
+    Should we keep this word based on the colors of our current letters?
+    """
     for pos, letter in colors.green:
         if word[pos] != letter:
             return False
@@ -80,6 +109,9 @@ def keep(colors, word):
     return True
 
 def main():
+    """
+    Main entry point
+    """
     english_words = load_words()
 
     colors = LetterColors()
@@ -95,7 +127,7 @@ def main():
         count += 1
         colors.update(res)
         if len(colors.green) == 5:
-            print("Congratulations!!")
+            print("Congratulations, you won!!")
             break
         words = [x for x in words if keep(colors, x)]
         print(f"Remaining words in round {count}: {len(words)}")
