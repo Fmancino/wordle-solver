@@ -2,6 +2,32 @@
 
 import random
 
+class LetterColors:
+
+    def __init__(self):
+        self.yellow = set()
+        self.green = set()
+        self.black = set()
+
+    def update(self, word):
+        for pos, letter in enumerate(word):
+            if (pos, letter) in self.green:
+                continue
+            while True:
+                ans = input(f"What color is letter '{letter}' in position '{pos}'?\n"
+                            "(g=green, y=yellow, b=black)\n")
+                if ans == 'g':
+                    self.green.add((pos, letter))
+                    break
+                if ans == 'y':
+                    self.yellow.add((pos, letter))
+                    break
+                if ans == 'b':
+                    self.black.add(letter)
+                    break
+                print("Answer with (g=green, y=yellow, b=black)")
+        print(f"Colors for word '{word}' updated correctly")
+
 def load_words():
     with open('words_alpha.txt') as word_file:
         valid_words = set(word_file.read().split())
@@ -15,26 +41,65 @@ def first_guess(words):
     print("FIRST WORD")
     differ_letters = [ x for x in words if all_letters_differ(x)]
     print(f"    Different letter words: {len(differ_letters)}")
-    w = guess(words)
+    w = guess(differ_letters)
     print(f"First guess is: {w}")
     return w
 
 def guess(words):
+    words_copy = words.copy()
     while True:
-        guess = random.choice(words)
-        print(f"    guessing: {guess}")
-        answer = input("    Make a different guess? (y,N)\n    ")
-        if answer != "y":
+        ret = random.choice(words_copy)
+        print(f"    guessing: {ret}")
+        answer = input("    Make a different guess? (y,i,N)\n    ")
+        if answer == "i":
+            ret = input("    Insert own guess:\n    ")
+            if len(ret) == 5:
+                break
+            else:
+                print("    Wrong length of guess!!")
+        elif answer == "y":
+            words_copy.remove(ret)
+        else:
             break
-    return guess
+    if ret in words:
+        words.remove(ret)
+    return ret
+
+def keep(colors, word):
+    for pos, letter in colors.green:
+        if word[pos] != letter:
+            return False
+    for pos, letter in colors.yellow:
+        if word[pos] == letter:
+            return False
+        if letter not in word:
+            return False
+    for letter in colors.black:
+        if letter in word:
+            return False
+    return True
 
 def main():
     english_words = load_words()
 
+    colors = LetterColors()
+
     five_letter_words = [ x for x in english_words if len(x) == 5 ]
     print(f"All 5 letter words: {len(five_letter_words)}")
 
-    guess = first_guess(five_letter_words)
+    words = five_letter_words
+    res = first_guess(five_letter_words)
+    count = 1
+
+    while True:
+        count += 1
+        colors.update(res)
+        if len(colors.green) == 5:
+            print("Congratulations!!")
+            break
+        words = [x for x in words if keep(colors, x)]
+        print(f"Remaining words in round {count}: {len(words)}")
+        res = guess(words)
 
 if __name__ == '__main__':
     main()
