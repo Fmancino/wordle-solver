@@ -26,7 +26,7 @@ class LetterColors:
             if (pos, letter) in self.green:
                 continue
             while True:
-                ans = input(f"What color is letter '{letter}' in position '{pos}'?\n"
+                ans = input(f"What color is letter '{letter}' in position '{pos + 1}'?\n"
                             "(g=green, y=yellow, b=black)\n")
                 if ans == 'g':
                     self.green.add((pos, letter))
@@ -35,7 +35,10 @@ class LetterColors:
                     self.yellow.add((pos, letter))
                     break
                 if ans == 'b':
-                    self.black.add(letter)
+                    if letter not in [ x for (_, x) in self.yellow.union(self.green) ]:
+                        self.black.add(letter)
+                    else:
+                        self.yellow.add((pos, letter))
                     break
                 print("Answer with (g=green, y=yellow, b=black)")
         print(f"Colors for word '{word}' updated correctly")
