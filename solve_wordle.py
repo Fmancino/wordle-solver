@@ -4,6 +4,8 @@ Small program to help you solve the 'wordle' game
 """
 
 import random
+import json
+from collections import Counter
 
 class LetterColors:
     """
@@ -63,9 +65,22 @@ def first_guess(words):
     How to guess the first word
     """
     print("FIRST WORD")
+
     differ_letters = [ x for x in words if all_letters_differ(x)]
     print(f"    Different letter words: {len(differ_letters)}")
-    w = guess(differ_letters)
+
+    letter_dist = Counter(''.join(differ_letters))
+    #print(f"    Letter distribution: {letter_dist}")
+    most_common = set(x for x, _ in letter_dist.most_common(9))
+    least_common = set(x for x, _ in letter_dist.most_common()).difference(most_common)
+    #print(f"    Least common letters: {least_common}")
+    exclude_least = LetterColors()
+    exclude_least.black = least_common
+    keep_w = [x for x in differ_letters if keep(exclude_least, x)]
+
+    print(f"    Different letter words with common letters: {len(keep_w)}")
+
+    w = guess(keep_w)
     print(f"First guess is: {w}")
     return w
 
@@ -125,14 +140,18 @@ def main():
     words = five_letter_words
     res = first_guess(five_letter_words)
     count = 1
+    stats = {}
 
     while True:
-        count += 1
         colors.update(res)
+        stats[count] = {"word": res, "choices": len(words) }
+        words = [x for x in words if keep(colors, x)]
         if len(colors.green) == 5:
             print("Congratulations, you won!!")
+            print("Stats:")
+            print(json.dumps(stats, indent=4))
             break
-        words = [x for x in words if keep(colors, x)]
+        count += 1
         print(f"Remaining words in round {count}: {len(words)}")
         res = guess(words)
 
