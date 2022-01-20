@@ -3,6 +3,7 @@
 Small program to help you solve the 'wordle' game
 """
 
+import argparse
 import random
 import json
 from collections import Counter
@@ -12,13 +13,14 @@ class LetterColors:
     Keep track of the colors of each letter
     """
 
-    def __init__(self):
+    def __init__(self, solution=None):
         """
         No letters to start
         """
         self.yellow = set()
         self.green = set()
         self.black = set()
+        self.solution = solution
 
     def update(self, word):
         """
@@ -27,22 +29,33 @@ class LetterColors:
         for pos, letter in enumerate(word):
             if (pos, letter) in self.green:
                 continue
-            while True:
-                ans = input(f"What color is letter '{letter}' in position '{pos + 1}'?\n"
-                            "(g=green, y=yellow, b=black)\n")
-                if ans == 'g':
+            if self.solution:
+                if self.solution[pos] == letter:
+                    print("green")
                     self.green.add((pos, letter))
-                    break
-                if ans == 'y':
+                elif letter in self.solution:
+                    print("yellow")
                     self.yellow.add((pos, letter))
-                    break
-                if ans == 'b':
-                    if letter not in [ x for (_, x) in self.yellow.union(self.green) ]:
-                        self.black.add(letter)
-                    else:
+                else:
+                    print("black")
+                    self.black.add(letter)
+            else:
+                while True:
+                    ans = input(f"What color is letter '{letter}' in position '{pos + 1}'?\n"
+                                "(g=green, y=yellow, b=black)\n")
+                    if ans == 'g':
+                        self.green.add((pos, letter))
+                        break
+                    if ans == 'y':
                         self.yellow.add((pos, letter))
-                    break
-                print("Answer with (g=green, y=yellow, b=black)")
+                        break
+                    if ans == 'b':
+                        if letter not in [ x for (_, x) in self.yellow.union(self.green) ]:
+                            self.black.add(letter)
+                        else:
+                            self.yellow.add((pos, letter))
+                        break
+                    print("Answer with (g=green, y=yellow, b=black)")
         print(f"Colors for word '{word}' updated correctly")
 
 def load_words():
@@ -130,9 +143,13 @@ def main():
     """
     Main entry point
     """
-    english_words = load_words()
+    parser = argparse.ArgumentParser(description='Help to solve wordle game and give suggestions')
+    parser.add_argument("-s,--solution", dest='solution', help='Add solution if known', default=None)
+    args = parser.parse_args()
 
-    colors = LetterColors()
+    colors = LetterColors(solution=args.solution)
+
+    english_words = load_words()
 
     five_letter_words = [ x for x in english_words if len(x) == 5 ]
     print(f"All 5 letter words: {len(five_letter_words)}")
@@ -144,7 +161,7 @@ def main():
 
     while True:
         colors.update(res)
-        stats[count] = {"word": res, "choices": len(words) }
+        stats[count] = {"word": res, "choices": len(words) + 1 }
         words = [x for x in words if keep(colors, x)]
         if len(colors.green) == 5:
             print("Congratulations, you won!!")
